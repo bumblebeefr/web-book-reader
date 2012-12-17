@@ -1,0 +1,589 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr" encoding="UTF-8">
+<head>
+	<meta http-equiv="Content-type" content="text/html;charset=utf-8" />
+	<meta charset="utf-8">
+	<title>Ebook PDF Reader - Proto</title>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+	<div id="header">
+		<div id="pageDisplay">
+			<input type="text" size="4" value="1" id="pageInput" /> / <span id="totalPage" ></span>
+		</div>
+		<ul id="controls">
+				<li class="hasSubMenu" id="navigate" title="Naviguer">
+					<ul>
+						<li id="showToc" class="clickable">Table des matieres</li>
+						<li id="showThumbs" class="clickable">Miniatures</li>
+					</ul>
+				</li>
+				<li class="hasSubMenu" id="display" title="Affichage">
+					<ul>
+						<li id="singlePage" class="clickable">Simple page</li>
+						<li id="doublePage" class="clickable">Double pages</li>
+					</ul>
+				</li>
+				<li class="hasSubMenu"  id="quality" title="Qualité">
+					<ul>
+						<li id="enableSvg" class="clickable">Vectoriel</li>
+						<li id="enableJpg" class="clickable">Image</li>
+					</ul>
+				</li>
+				<li id="firstPage" class="clickable" title="Première page"> </li>
+				<li id="previousPage" class="clickable" title="Page précédente"> </li>
+				<li id="nextPage" class="clickable" title="Page suivante"> </li>
+				<li id="lastPage" class="clickable" title="Dernière Page"> </li>	
+				<li id="in" class="clickable" title="Agrandire"> </li>
+				<li id="out" class="clickable" title="Réduire"> </li>
+				<li class="hasSubMenu" id="zoom" title="Zoom">
+					<ul>
+						<li id="orig" class="clickable" title="100%">Taille réelle</li>
+						<li id="fit" class="clickable" title="Ajuster à la page">Ajuster à la page</li>
+						<li id="fitW" class="clickable" title="Ajuster en largeur">Ajuster en largeur</li>
+						<li id="fitH" class="clickable" title="Ajuster en hauteur">Ajuster en hauteur</li>
+					</ul>
+				</li>
+		</ul>
+	</div>
+	<div id="main"><div id="viewer"></div></div>
+	<script type="text/javascript" src="js/jquery-1.6.2.js" ></script>
+	<script type="text/javascript" src="js/jquery.history.js" ></script>
+	<script type="text/javascript" src="js/jquery.mousewheel.min.js" ></script>
+	<script type="text/javascript" src="js/jquery.iviewer.js" ></script>
+	<script type="text/javascript" src="js/jquery.scrollTo-1.4.2.js" ></script>
+	<script type="text/javascript" src="js/jquery.dragscrollable.js" ></script>
+	<script type="text/javascript" src="js/jquery.tools.min.js" ></script>
+	<script type="text/javascript" src="js/jquery.browser.mobile.js" ></script>
+	<script type="text/javascript">
+
+		if(!console){
+
+			console = {
+				log:function(){},
+				time:function(){}
+			}
+		}
+
+		(function($) {
+				$.fn.isInWindow = function(addMargin) {
+					_window = $(window);
+					_this = $(this);
+					var docViewTop = _window.scrollTop() - (addMargin ? _window.height() :0)  ;
+					var docViewBottom = docViewTop + (addMargin ? 3*_window.height() : _window.height());
+
+					var elemTop = _this.offset().top;
+					var elemBottom = elemTop + _this.height();
+
+					return ((elemBottom >= docViewTop && elemBottom <= docViewBottom) 
+						|| (elemTop >= docViewTop && elemTop <= docViewBottom)
+						|| (elemTop <= docViewTop && elemBottom >= docViewBottom));
+				};
+
+				$.fn.isVisible = function(container) {
+					var _this = $(this);
+					var docViewTop = 0;
+					var docViewBottom = container.height();
+
+					var elemTop = _this.position().top;
+					var elemBottom = elemTop + _this.height();
+
+					return ((elemBottom >= docViewTop && elemBottom <= docViewBottom) 
+						|| (elemTop >= docViewTop && elemTop <= docViewBottom)
+						|| (elemTop <= docViewTop && elemBottom >= docViewBottom));
+				};
+			})(jQuery);
+
+
+
+		var PdfBook = {
+			initilized : false,
+			bookPath : "/web-book-reader/proto-pdf/",
+			pdf : 0,
+			type:"jpg",
+			pageMode:"single", //can be 'single' or 'double'
+			currentPage:0,
+			scrollStepper:0,
+			zoomValue:100,
+			zoomType:'fit' //'fit','fitHeight','fitWidth','1:1','xxx%'
+		 }
+
+		function doResize(){
+ 				$("#main").css("height",$("body").innerHeight()+"px");
+ 				$("#main").css("width",$("body").innerWidth()+"px");
+ 				$("#header").css("width",$("body").innerWidth()+"px");
+				if(PdfBook.initilized) refreshView();
+		}
+		function showThumbs(){
+			console.time("showThumbs");
+			if($("#thumbs").length ==0){
+				var _thumbs = $("<div id='thumbs'/>");
+				var _thumbs_root_html = "<div id='thumbsRoot'><div class='thumbPg'><div class='thumbPg'>";
+				
+				for(var i =1;i<=PdfBook.description.totalPageNumber;i++){
+					if((i-1)%200 == 0){
+						_thumbs_root_html += "</div></div><div class='thumbPg'><div class='thumbPg'>";
+					}else  if((i-1)%50 == 0){
+						_thumbs_root_html += "</div><div class='thumbPg'>";
+					}
+					_thumbs_root_html += "<div class='thumb hidden clickable' data-page='"+i+"'><div class='pageNo'>"+i+"</div></div>";
+				}
+				_thumbs_root_html += "</div></div></div>";
+				$("body").append(_thumbs.html(_thumbs_root_html));
+				_thumbs.overlay({	
+					mask: {color: '#333333',opacity: 0.5},
+					closeOnClick: false
+				});
+				_thumbs.click(function(event){
+					var _this = $(event.target);
+					var _parent = _this.parents(".thumb");
+					if(_parent.length ==1) {
+						_this = _parent;
+					}
+					if(_this.hasClass("thumb")){
+						showPage(parseInt(_this.attr("data-page")));
+						$("#thumbs").data("overlay").close();
+					}
+				});
+				$("#thumbsRoot").scroll(function(){initThumbs()});
+			}
+			$("#thumbs").data("overlay").load();
+			initThumbs();
+			console.timeEnd("showThumbs");
+		}
+
+		function initThumbs() {
+			var cpt =0;
+			console.time("initThumbs");
+			var _root = $("#thumbsRoot");
+			_root.children(".thumbPg").each(function() {
+				var _pg = $(this);
+				if (_pg.isVisible(_root)) {
+					_pg.children(".thumbPg").each(function() {
+						var _pg2 = $(this);
+						if (_pg2.isVisible(_root)) {
+							_pg2.children(".hidden").each(function(){
+								var _this = $(this);
+								if(_this.isVisible($("#thumbsRoot"))){
+									var p = parseInt(_this.attr("data-page"));
+									$(this).append($("<img src='"+thumbUrl(p)+"' style='display:none' onload='showMe(this)' title='page "+p+"' />")).removeClass("hidden");
+									cpt++
+								}
+							});
+						}
+					});
+				}
+			});
+			console.timeEnd("initThumbs");
+			console.log("initThumbs : "+cpt);
+		}
+
+
+		function showToc(){
+			console.time("generateToc");
+			if($("#toc").length ==0){
+				var _toc = $("<div id='toc'/>");
+				var _toc_root = $("<ul id='tocRoot'/>");
+				recurseToc(PdfBook.description.toc,_toc_root);
+				$("body").append(_toc.append(_toc_root));
+				_toc.overlay({	
+					mask: {color: '#333333',opacity: 0.5},
+					closeOnClick: true
+				});
+			}
+			$("#toc").data("overlay").load();
+			console.timeEnd("generateToc");
+		}
+
+		function recurseToc(toc,elment){
+			var clickEvt = function(event){
+				console.log(event.currentTarget);
+				showPage($(event.currentTarget).data("page"));
+				$("#toc").data("overlay").close();
+			}
+			for(var i = 0;i<toc.length;i++){
+				var p=toc[i].page+1;
+				var _li = $("<li class='clickable'>"+toc[i].title+" <em>p."+p+"</em></li>").data("page",p).click(clickEvt);
+				elment.append(_li);
+				if(toc[i].subToc.length >0){
+					var _ul = $("<ul/>");
+					recurseToc(toc[i].subToc,_ul);
+					elment.append(_ul);
+				}
+
+			}
+		}
+
+
+		/**
+		/* Calcul la tailles des pages et du conteneur affiché. 
+		/* Retourn un tableau a 2 ou 3 elements :
+		/* 0 : Tailles du container(#viewer)
+		/* 1 : Taille de la premiere page
+		/* 2 : Taille de la Seconde page (dans le cas d'un affichage double)
+		/* Chaque taille est representé par un tableau à 2 ou 3 entrées : largeur, hauteur, visible (boolean passé a false si la page est une page blanche.)
+		**/
+		function computeZoom(page1,page2) {
+				if($.isArray(page1)){
+					page2= page1[1];
+					page1= page1[0];
+				}
+				var sizeArray = [[0,0]];
+				for(var p = page1;p<=page2;p++){
+					var pSize = p;	
+					if(pSize <1) pSize =1;
+					if(pSize > PdfBook.description.totalPageNumber) pSize = PdfBook.description.totalPageNumber;
+					var size = $.makeArray(PdfBook.description.sizes[pSize]);
+					if(pSize == p) {
+						size[2] = true; 
+					}else {
+						size[2] = false;
+					}
+					sizeArray.push(size);
+					sizeArray[0][0]+=size[0];
+					sizeArray[0][1] = Math.max(size[1],sizeArray[0][1]);
+				}
+				console.log(sizeArray);
+				var _main = $("#main");
+				var wRatio = (_main.innerWidth()-10)/sizeArray[0][0];
+				var hRatio = (_main.innerHeight()-50)/sizeArray[0][1];
+
+				
+				switch(PdfBook.zoomType){
+					case 'fit' :
+						PdfBook.zoomValue = Math.min(wRatio,hRatio);
+						break;
+					case 'fitHeight' :
+						PdfBook.zoomValue = hRatio;
+						break;
+					case 'fitWidth' :
+						PdfBook.zoomValue = wRatio;
+						break;
+				}
+
+				for(var j=0;j<2;j++){
+						sizeArray[0][j] = Math.round(sizeArray[0][j] * PdfBook.zoomValue);
+				}
+				if(PdfBook.pageMode == 'double') {
+						sizeArray[1][1] = sizeArray[0][1];
+						sizeArray[1][0] = Math.round(sizeArray[0][0]/2);
+						sizeArray[2][1] = sizeArray[0][1];
+						sizeArray[2][0] = Math.round(sizeArray[0][0]/2);
+						//FIXME En fait il faudrait calculer le ratio de chaque page par rapport au pere mais bon..
+
+				}else{
+					sizeArray[1][1] = sizeArray[0][1];
+					sizeArray[1][0] = sizeArray[0][0];
+				}
+				
+				return sizeArray;
+		}
+
+		/**
+		/* Retourne les bord des pages a afficher sous forme d'un t'abealu a deux entrées. 
+		/* Les deux bornes sont identiques dan sle ca d'un affiche monopage.
+		*/
+		function getPages(pageNumber){
+			var page1 = 0;
+			var page2 = 0;
+			if(PdfBook.pageMode=="single"){
+				page1 = pageNumber;
+				page2 = pageNumber;
+			}else{
+				if(pageNumber %2 == 1){
+					var page1 = pageNumber-1;
+					var page2 = pageNumber;
+				}else{
+					var page1 = pageNumber;
+					var page2 = pageNumber+1;
+				}
+			}
+			return[page1,page2];
+		}
+
+
+
+		function pageUrl(i){
+			if(i < 1 || i > PdfBook.description.totalPageNumber) {
+				return "about:blank";
+			}
+			var zero = "";
+			if(i < 10) zero="00";
+			else if(i < 100) zero="0";
+			if(PdfBook.type =="jpg"){
+				return PdfBook.bookPath+"full/page-"+zero+i+".jpg";
+			}else{
+				return PdfBook.bookPath+"svg/page-"+zero+i+".svg";
+			}
+		}
+		function thumbUrl(i){
+			if(i < 1 || i > PdfBook.description.totalPageNumber) {
+				return "about:blank";
+			}
+			var zero = "";
+			if(i < 10) zero="00";
+			else if(i < 100) zero="0";
+			return PdfBook.bookPath+"thumb/page-"+zero+i+".jpg";
+		}
+	
+		function showPage(pageNumber,force){
+			console.time('showPage');
+			if(pageNumber <1) pageNumber =1;
+			if(pageNumber > PdfBook.description.totalPageNumber) pageNumber = PdfBook.description.totalPageNumber;
+			if(force || pageNumber != PdfBook.currentPage){
+				PdfBook.currentPage = pageNumber;
+				$("#pageInput").val(pageNumber);
+				
+				console.tim
+				var pages = getPages(pageNumber);			
+				var viewer = $("#viewer").empty();
+				var sizes = computeZoom(pages);
+				var i=1;
+				for(var p = pages[0];p<=pages[1];p++){
+					var pageHtml = $("<div class='page "+(sizes[i][2] ? 'fullPage' : 'emptyPage')+"' id='page"+i+"' />").css("width",(sizes[i][0])+"px").css("height",sizes[i][1]+"px");
+					if(sizes[i][2]){
+						pageHtml.html("<img src='"+pageUrl(p)+"' width='100%' height='100%' onload='showMe(this)' />");
+					}
+					$("#viewer").append(pageHtml);
+					i++;
+				}
+				viewer.css("width",sizes[0][0]+"px").css("height",sizes[0][1]+"px");
+				$("#main").scrollTop(0).scrollLeft(0);
+			}
+			console.timeEnd('showPage');
+		}
+
+		function setZoom(zoomType) {
+			if(zoomType){
+				if(! isNaN(parseFloat(zoomType))){
+					PdfBook.zoomValue = parseFloat(zoomType)/100;
+					PdfBook.zoomType = "%";
+				}else{
+					PdfBook.zoomType = zoomType;
+				}
+			}
+			refreshView();
+		}
+
+
+		function zoomOut() {
+			setZoom(PdfBook.zoomValue*90);
+		}
+		function zoomIn() {
+			setZoom(PdfBook.zoomValue*110);
+		}
+
+		function refreshView() {
+			var sizes = computeZoom(getPages(PdfBook.currentPage));
+			$("#viewer").css("width",sizes[0][0]+"px").css("height",sizes[0][1]+"px");
+			$("#page1").css("width",sizes[1][0]+"px").css("height",sizes[1][1]+"px");
+			$("#page2").css("width",sizes[1][0]+"px").css("height",sizes[1][1]+"px");
+		}
+
+		function showMe(me){
+			$(me).fadeIn();
+		}
+
+		function goToNextPage(){
+			var inc = PdfBook.pageMode=="single" ? 1 : 2;
+			showPage(PdfBook.currentPage+inc);
+		}
+
+
+		function goToFirstPage(){
+			showPage(1);
+		}
+
+
+		function goToLastPage(){
+			showPage(PdfBook.description.totalPageNumber);
+		}
+
+		function goToPreviousPage(atBottom){
+			var inc = PdfBook.pageMode=="single" ? -1 : -2;
+			showPage(PdfBook.currentPage+inc);
+			console.log(atBottom);
+			if(atBottom != null){
+				$("#main").scrollTop(1000);
+			}
+		}
+
+		
+
+		function scrollPage(delta){
+			var _main = $("#main");
+				console.log(delta,_main.scrollTop());
+				var st = _main.scrollTop();
+				_main.scrollTop(_main.scrollTop() - 100*delta);
+				if (st == _main.scrollTop()){
+					PdfBook.scrollStepper ++;
+					if(PdfBook.scrollStepper >= 2){
+						PdfBook.scrollStepper == 0;
+						if (delta <0 ){
+							goToNextPage();
+						}else{
+							goToPreviousPage(true);
+						}
+					}
+				}else{
+					PdfBook.scrollStepper = 0;
+				}
+		}
+
+		$(function(){
+			doResize();
+			$(window).resize(doResize);
+			$("#main").dragscrollable();
+			$("#main").mousewheel(function(event, delta){
+				scrollPage(delta);
+			})
+
+			if($.browser.mobile){
+				$("body").addClass("mobile");
+			}
+
+			PdfBook.bookPath += document.location.search.replace("?","") + "/";
+
+			$.ajax({
+				url: PdfBook.bookPath+"description.json",
+				dataType :"json",
+				success: function(data){
+					try{
+						PdfBook.description=data;
+						showPage(1);
+						PdfBook.initilized =true;
+
+						$("#totalPage").text(PdfBook.description.totalPageNumber);
+					}catch (e){
+						console.log(e);
+					}
+				},
+				error : function(a,b,c) {
+					console.log(a);
+					console.log(b);
+					console.log(c);
+				}
+			});
+
+			if(!$.browser.mobile){
+				$("#header").hover(
+					function(){
+						$(this).addClass('open');
+						$("#controls").stop(true,true).slideDown(100)
+					},
+					function(){
+						$("#controls").stop(true,true).slideUp('fast',function(){
+							$("#header").removeClass('open');
+						});
+					}
+				);
+
+				$("#header li.hasSubMenu").hover(
+					function(){
+						$(this).children("ul").stop(true,true).fadeIn()
+					},
+					function(){
+						$(this).children("ul").stop(true,true).fadeOut()
+					}
+				);
+
+				$("#controls").slideUp('slow');
+			}else{
+				$("#header li.hasSubMenu").click(
+					function(){
+						$(this).children("ul").toggle()
+					}
+				);
+
+
+			}
+
+
+
+
+			$("#in").click(zoomIn); 
+			$("#out").click(zoomOut); 
+			$("#orig").click(function(){ 
+				setZoom(100);
+			});  
+			$("#fit").click(function(){ 
+				setZoom("fit");
+			});   
+			$("#fitW").click(function(){ 
+				setZoom("fitWidth");
+			});   
+			$("#fitH").click(function(){ 
+				setZoom("fitHeight");
+			}); 
+
+			$("#pageInput").change(function(){
+				var p = parseInt($("#pageInput").val());
+				if(isNaN(p)){
+					$("#pageInput").val(PdfBook.currentPage);
+				}else{
+					showPage(p);
+				}
+			});
+			$("#nextPage").click(function(){goToNextPage()});
+			$("#previousPage").click(function(){goToPreviousPage()});
+			$("#firstPage").click(function(){goToFirstPage()});
+			$("#lastPage").click(function(){goToLastPage()});
+			$("#singlePage").click(function(){
+				if(PdfBook.pageMode!="single"){
+					PdfBook.pageMode="single";
+					showPage(PdfBook.currentPage,true);
+				}
+			});
+			$("#doublePage").click(function(){
+				if(PdfBook.pageMode!="double"){
+					PdfBook.pageMode="double";
+					showPage(PdfBook.currentPage,true);
+				}
+			});
+
+			$("#showToc").click(showToc);
+			$("#showThumbs").click(showThumbs);
+
+			$("#enableSvg").click(function(){
+				PdfBook.type="svg";
+				showPage(PdfBook.currentPage,true);
+			});
+
+			$("#enableJpg").click(function(){
+				PdfBook.type="jpg";
+				showPage(PdfBook.currentPage,true);
+			});
+
+
+			$(document).keydown(function(event) {
+				console.log(event.keyCode);
+				switch(event.keyCode){
+					case 33:
+					case 37:
+						goToPreviousPage();
+						break;
+					case 38:
+						scrollPage(+1);
+						break;
+					case 34:
+					case 39:
+						goToNextPage();
+						break;
+					case 40:
+						scrollPage(-1);
+						break;
+					case 36:
+						goToFirstPage();
+						break;
+					case 35:
+						goToLastPage()
+						break;
+				}
+			});
+			
+		});
+
+		
+
+	</script>
+</body>
+</html>

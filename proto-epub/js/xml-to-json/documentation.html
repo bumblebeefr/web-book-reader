@@ -1,0 +1,587 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head> 
+ <title>jQuery XML to JSON Plugin v1.0 (2008-07-03)</title>
+ <!--// documentation resources //-->
+ <script src='jquery.js' type="text/javascript"></script>
+ <script src='documentation.js' type="text/javascript"></script>
+ <link href='documentation.css' type="text/css" rel="stylesheet"/>
+ <!--// code-highlighting //-->
+	<script type="text/javaScript" src="/jquery/project/chili/jquery.chili-2.0.js"></script> 
+	<!--///jquery/project/chili-toolbar/jquery.chili-toolbar.pack.js//-->
+ <script type="text/javascript">try{ChiliBook.recipeFolder="/jquery/project/chili/"}catch(e){}</script>
+ <!--// plugin-specific resources //-->
+ <script src='jquery.xml2json.js' type="text/javascript" language="javascript"></script>
+ <script src="testing.js" type="text/javascript" language="javascript"></script>
+ <style type="text/css">
+  .test-result{ font-size:97%; background:#f7f7f7; padding:3px 10px; border:#ccc solid 3px; height:250px; overflow:auto; }
+  .test-result ul{ margin:0 0 0 15px; }
+ </style>
+</head>
+<body>
+<a name="top"></a>
+<div id="wrap">
+ <div id="roof">
+  <a href="http://www.fyneworks.com/jquery/"><strong>jQuery Plugins</strong></a>:
+  <a href="http://www.fyneworks.com/jquery/multiple-file-upload/">Multiple File Upload</a>,
+  <a href="http://www.fyneworks.com/jquery/star-rating/">Star Rating</a>,
+  <strong>NEW:</strong> 
+  <a href="http://www.fyneworks.com/jquery/FCKEditor/">CKEditor</a>
+  (old: <a href="http://www.fyneworks.com/jquery/FCKEditor/">FCKEditor</a>),
+  <a href="http://www.fyneworks.com/jquery/Codepress/">Codepress</a>,
+  <a href="http://www.fyneworks.com/jquery/xml-to-json/">XML to JSON</a>
+  <span style="position:absolute; right:0;">
+   <script type="text/javascript">digg_title='jQuery XML to JSON Plugin';</script>
+			<script type="text/javascript">digg_url='http://www.fyneworks.com/jquery/xml-to-json/';</script>
+   <script type="text/javascript">digg_bgcolor='#e7e7e7';digg_skin='compact';digg_window='new';</script>
+   <script src="http://digg.com/tools/diggthis.js" type="text/javascript"></script>
+  </span>
+ </div>
+ <div id="head">
+  <table width="100%" cellspacing="5">
+   <tr>
+    <td valign="middle">
+     <h1>jQuery XML to JSON Plugin</h1>
+     <span style="cursor:help; background:#C00; padding:2px; color:#FFF;" title="Current Version">
+      v<strong>1.0</strong>
+     </span>
+    </td>
+    <td valign="middle" width="450" align="right">
+     <div id="search" style="display:none">
+      <form action="http://www.google.com/cse" id="cse-search-box" target="_blank">
+        <label for="q">Find another jQuery plugin:</label>
+        <input type="hidden" name="cx" value="partner-pub-9465008056978568:j3ebzr-v1o0" />
+        <input type="hidden" name="ie" value="ISO-8859-1" />
+        <input type="text" name="q" id="q" size="20" />
+        <input type="submit" name="sa" value="Search" />
+      </form>
+      <script type="text/javascript" src="http://www.google.com/coop/cse/brand?form=cse-search-box&amp;lang=en"></script>
+     </div>
+     <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+      <input type="hidden" name="cmd" value="_s-xclick">
+      <input type="hidden" name="hosted_button_id" value="6856904">
+      <input type="image" src="https://www.paypal.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online.">
+      <img alt="" border="0" src="https://www.paypal.com/en_GB/i/scr/pixel.gif" width="1" height="1">
+     </form>
+    </td>
+   </tr>
+  </table>
+ </div>
+ 
+ <div class="hint">
+  <span style="float:right">
+   See also: <a href="http://plugins.jquery.com/project/xmlObjectifier/">xmlObjectifier</a>
+  </span>
+  <strong>Hint</strong>:
+  use <a href="http://www.getfirefox.com/" target="_blank">Firefox</a>
+  with <a href="http://getfirebug.com/" target="_blank">Firebug</a> to
+  really see what's going on.
+ </div>
+
+ <div id="body">
+  
+  <div id="ad"><a href="http://www.pinesandneedles.com/" target="_blank"><img src="http://www.pinesandneedles.com/U/fyneworks-ad.png" width="120" height="200" alt="FREE mistletoe with your Christmas tree" style="margin:0 0 40px 0;"/></a>
+   <!--//
+   <div id='vu_ytplayer_vjVQa1PpcFNzWL_xJNUOpZhjtZP7PE8aGHuLQqHHrFI='><a href='http://www.youtube.com/browse'>Watch the latest videos on YouTube.com</a></div>
+   <script type='text/javascript' src='http://www.youtube.com/watch_custom_player?id=vjVQa1PpcFNzWL_xJNUOpZhjtZP7PE8aGHuLQqHHrFI='></script>
+   //-->
+<script type="text/javascript"><!--
+google_ad_client = "pub-9465008056978568";
+/* 120x600, created 25/11/09 */
+google_ad_slot = "4176621808";
+google_ad_width = 120;
+google_ad_height = 600;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+  </div>
+  
+  <div id="documentation" class="tabs">
+   <ul class="Clear">
+    <li><a href="#tab-Overview" id="btn-Overview">Overview</a></li>
+    <li><a href="#tab-Usage" id="btn-Usage">Usage</a></li>
+    <li><a href="#tab-Examples" id="btn-Examples">Examples</a></li>
+    <li><a href="#tab-Download" id="btn-Download">Download</a></li>
+    <li><a href="#tab-Support" id="btn-Support">Support</a></li>
+    <li><a href="#tab-License" id="btn-License">License</a></li>
+   </ul><!--// tabs //-->
+   <!--//
+   ####################################
+   #
+   #        * START CONTENT *
+   #
+   ####################################
+   //-->
+   
+   
+   
+   
+   
+   <div id="tab-Overview">
+    <h2>What is this?</h2>
+    <p>
+     The <strong>XML to JSON Plugin</strong> (<em>jQuery.xml2json</em>)
+     is a script you can use to convert simple XML into a JSON object.
+    </p>
+    <table width="100%">
+     <tr>
+      <td valign="top" width="50%">
+       <h3>Convert this...</h3>
+       <pre class="code"><code class="html">&lt;xml&gt;
+ &lt;message&gt;Hello world&lt;/message&gt;
+&lt;/xml&gt;</code></pre>
+      </td>
+      <td valign="top" width="50%">
+       <h3>...into this:</h3>
+       <pre class="code"><code class="js">{
+ message: 'Hello world';
+}</code></pre>
+      </td>
+     </tr>
+    </table>
+    
+    <h2>How does it work?</h2>
+    <table width="100%">
+     <tr>
+      <td valign="top" width="50%">
+       <h3>With XML in a string</h3>
+       <a href="javascript:;" onClick="eval($(this).next().text())">Click here to test this code</a>
+       <pre class="code"><code class="js">var xml = '&lt;xml&gt;&lt;message&gt;Hello world&lt;/message&gt;&lt;/xml&gt;';
+var json = $.xml2json(xml);
+alert(json.message);</code></pre>
+      </td>
+      <td valign="top" width="50%">
+       <h3>With XML loaded via Ajax</h3>
+       <a href="javascript:;" onClick="eval($(this).next().text())">Click here to test this code</a>
+       <pre class="code"><code class="js">$.get('data/hello.xml', function(xml){
+ var json = $.xml2json(xml);
+ alert(json.message);
+});</code></pre>
+      </td>
+     </tr>
+    </table>
+    
+    <h2>Why convert XML to JSON?</h2>
+    <p>
+     Those of you with a little more jQuery experience will know that
+     in simple cases (such as  the above) we could use jQuery DOM traversing
+     functionality to achieve the same result without the need of a plugin:
+    </p>
+    <pre class="code"><code class="js"
+    >alert($('&lt;xml&gt;&lt;message&gt;Hello world&lt;/message&gt;&lt;/xml&gt;').find('message').text());</code></pre>
+    <div style="color:#006600">
+     <strong>Hint</strong>: you do not need this plugin if that's as complex as your XML will get.
+    </div>
+    <p>
+     <strong>However</strong>, jQuery's DOM traversing can soon become a little tiring
+     if...<br/>
+     A. you frequenly process XML responses from Ajax calls<br/>
+     B. you parse complex/large XML documents (such as RSS feeds)<br/>
+     ...in which case this plugin is perfect for you.
+    </p>
+    <p>
+     I made this plugin for my own convenience when processing XML files and
+     I hope the benefits will become more aparent as you work
+     your way through the examples on this page.
+    </p>
+
+   </div><!--// tab-Overview //-->
+   
+   <div id="tab-Usage">
+    <p>Consider the following XML file (<a href="data/animals.xml" target="_blank">data/animals.xml</a>):</p>
+    <pre class="code"><code class="html">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;animals&gt;
+ &lt;dog color='Black'&gt;
+  &lt;name&gt;Rufus&lt;/name&gt;
+  &lt;breed&gt;labrador&lt;/breed&gt;
+ &lt;/dog&gt;
+ &lt;dog breed='whippet'&gt;
+  Adopted
+  &lt;name&gt;Marty&lt;/name&gt;
+ &lt;/dog&gt;
+ &lt;cat color=&quot;White&quot;&gt;
+  &lt;name&gt;Matilda&lt;/name&gt;
+ &lt;/cat&gt;
+&lt;/animals&gt;
+</code></pre>
+    
+    <h2>Simple Mode</h2>
+    <a href="javascript:;" onClick="eval($(this).next().text())">Click here to test this code</a>
+    <pre class="code"><code class="js">$.get('data/animals.xml', function(xml){
+ var animals = $.xml2json(xml);
+ alert(animals.dog[1].name +'/'+ animals.dog[1]);
+});</code></pre>
+    <p>
+     In simple mode, the plugin will only use arrays and objects when necessary.
+     It also means you don't have to use .text (or .nodeValue) to retrieve the text of each node.
+    </p>
+    <table width="100%">
+     <tr>
+      <td valign="top" width="50%">
+       <h3>Resulting JSON object</h3>
+       <pre class="code"><code class="js">{
+ dog:[
+  { name:'Rufus', breed:'labrador', color:'Black' },
+  { text:'Adopted', name:'Marty', breed:'whippet' }
+ ],
+ cat:{ name:'Matilda', color:'White'}
+}</code></pre>
+      </td>
+      <td valign="top" width="50%">
+       <h3>Accessing the data</h3>
+       <pre class="code"><code class="js">animals.dog === '{Array}';
+animals.dog[0] === '{Object}'; // No text in node
+animals.dog[0].name === 'Rufus';
+animals.dog[0].color === 'Black';// from attribute
+animals.dog[0].breed === 'labrador';
+animals.dog[1] === 'Adopted'; // text in node (animals.dog[1].text)
+animals.dog[1].name === 'Marty';
+animals.dog[1].breed === 'whippet';
+animals.cat === '{Object}'; // only 1 cat, array not required
+animals.cat.name === 'Matilda';
+animals.cat.color === 'White';</code></pre>
+      </td>
+     </tr>
+    </table>
+    
+    <h2>Extended Mode</h2>
+    <a href="javascript:;" onClick="eval($(this).next().text())">Click here to test this code</a>
+    <pre class="code"><code class="js">$.get('data/animals.xml', function(xml){
+ var animals = $.xml2json(xml, true);
+ alert(animals.dog[1].name[0].text +'/'+ animals.dog[1].text);
+});</code></pre>
+    <p>
+     In extended mode, the plugin converts each and <strong class="Warning">every node into an array</strong>.
+    </p>
+    <table width="100%">
+     <tr>
+      <td valign="top" width="50%">
+       <h3>Resulting JSON object</h3>
+       <pre class="code"><code class="js">{
+ dog:[
+  { name:['Rufus'], breed:['labrador'], color:'Black' },
+  { text:'Adopted', name:['Marty'], breed:'whippet' }
+ ],
+ cat:[
+  { name:'Matilda', color:'White'}
+ ]
+}</code></pre>
+      </td>
+      <td valign="top" width="50%">
+       <h3>Accessing the data</h3>
+       <pre class="code"><code class="js">animals.dog === '{Array}';
+animals.dog[0] === '{Object}'; // No text in node
+animals.dog[0].name[0].text === 'Rufus';
+animals.dog[0].color[0].text === 'Black';// from attribute
+animals.dog[0].breed[0].text === 'labrador';
+animals.dog[1] === '{Object}'; // node text stored in '.text'
+animals.dog[1].text === 'Adopted'; // not available in animals.dog[1]
+animals.dog[1].name[0].text === 'Marty';
+animals.dog[1].breed[0].text === 'whippet';
+animals.cat === '{Array}';
+animals.cat[0] === '{Object}';
+animals.cat[0].name[0].text === 'Matilda';
+animals.cat[0].color[0].text === 'White';</code></pre>
+      </td>
+     </tr>
+    </table>
+   </div><!--// tab-Usage //-->
+   
+   <div id="tab-Examples">
+    <div class="tabs">
+     <ul class="Clear">
+      <li><a href="#tab-Examples-101">Simple Mode</a></li>
+      <li><a href="#tab-Examples-EXT">Extended Mode</a></li>
+      <li><a href="#tab-Examples-RSS">RSS Feeds</a></li>
+     </ul><!--// tabs //-->
+     <div id="tab-Examples-101">
+      <p>
+       This is how the plugin works in <strong class="Yes">simple mode</strong> (default)
+       - which represents the XML data in a structure that is as
+       <strong class="Yes">simple and easy to use</strong> as possible.
+      </p>
+      <table width="100%" class="structure-test">
+       <tr>
+        <td valign="top" width="33%">FILE: <a href="data/notes.xml" target="_blank"><strong>data/notes.xml</strong></a></td>
+        <td valign="top" width="33%">FILE: <a href="data/menu.xml" target="_blank"><strong>data/menu.xml</strong></a></td>
+        <td valign="top" width="33%">FILE: <a href="data/catalog.xml" target="_blank"><strong>data/catalog.xml</strong></a></td>
+       </tr>
+      </table>
+      <h3>Why do this?</h3>
+      <p>
+       The benefit of this behaviour is that <strong>arrays are only used when necessary</strong>.
+      </p>
+      <table width="100%" cellspacing="0">
+       <tr>
+        <td valign="top" width="50%">
+         So you can do this...
+         <pre class="code"><code class="js">json.node</code></pre>
+        </td>
+        <td valign="top" width="50%">
+         ...instead of this:
+         <pre class="code"><code class="js">json.node[0].text</code></pre>
+        </td>
+       </tr>
+      </table>
+     </div>
+     <div id="tab-Examples-EXT">
+      <p>
+       This is how the plugin works in <strong class="Yes">extended mode</strong>
+       - where each and <strong class="Warning">every node is an array</strong>.
+      </p>
+      <table width="100%" class="structure-test extended">
+       <tr>
+        <td valign="top" width="33%">FILE: <a href="data/notes.xml" target="_blank"><strong>data/notes.xml</strong></a></td>
+        <td valign="top" width="33%">FILE: <a href="data/menu.xml" target="_blank"><strong>data/menu.xml</strong></a></td>
+        <td valign="top" width="33%">FILE: <a href="data/catalog.xml" target="_blank"><strong>data/catalog.xml</strong></a></td>
+       </tr>
+      </table>
+      <h3>This is what I need. How do I get it?</h3>
+      <p>
+       Simple, just add 'true' to the second parameter when you call the plugin, like this:
+      </p>
+      <pre class="code"><code class="js">// ... get your xml data
+var json = $.xml2json(xml, true /* extended structure */);
+// ... do some stuff</code></pre>
+     </div>
+     <div id="tab-Examples-RSS">
+      <p>
+       You can <strong class="Yes">load and format an RSS feed</strong> just
+       like you would work on any other XML file. The plugin loads the structure
+       onto an easy to use JSON object so you can easily loop through every item in
+       the rss channel like this:
+      </p>
+      <table width="100%">
+       <tr>
+        <td valign="top" width="50%">
+         <pre class="code"><code class="js">$.get('data/rss.xml', function(xml){
+  $('#test-rss').html(''); /* clear result div */
+  var rss = $.xml2json(xml);
+  $.each(rss.channel.item, function(i, item){
+    $('#test-rss').append('&lt;p&gt;'
+      +'&lt;strong&gt;'+item.title+'&lt;/strong&gt;&lt;br/&gt;'
+      +'&lt;u&gt;Description&lt;/u&gt;: '+item.description+'&lt;br/&gt;'
+      +'&lt;u&gt;Author&lt;/u&gt;: '+item.author+'&lt;br/&gt;'
+      +'&lt;small style=&quot;color:green;&quot;&gt;'+item.link+'&lt;/small&gt;'
+    +'&lt;/p&gt;');
+  });
+});</code></pre>
+         <p align="right">
+          <a href="javascript:;" onClick="window.prompt('Sample code:',$(this).parent().prev().text())">Copy code</a>
+          |
+          <a href="javascript:;" onClick="eval($(this).parent().prev().text())"><strong>RUN TEST &raquo;</strong></a>
+         </p>
+        </td>
+        <td valign="top" width="50%">
+         <div id="test-rss" class="test-result">
+          <p>This is div#test-rss. Results of the test above will be shown here</p>
+         </div>
+        </td>
+       </tr>
+      </table>
+      <h2>View Structure</h2>
+      <table width="100%">
+       <tr>
+        <td valign="top" width="50%" class="structure-test">
+         <h3>In simple mode</h3>
+         FILE: <a href="data/rss.xml" target="_blank"><strong>data/rss.xml</strong></a>
+        </td>
+        <td valign="top" width="50%" class="structure-test extended">
+         <h3>In extended mode</h3>
+         FILE: <a href="data/rss.xml" target="_blank"><strong>data/rss.xml</strong></a>
+        </td>
+       </tr>
+      </table>
+     </div>
+    </div>
+   </div><!--// tab-Examples //-->
+   
+   <div id="tab-Download">
+    <h2>Download</h2>
+    <table cellspacing="5">
+     <tr>
+      <td valign="top" align="right">Package:</td>
+      <td valign="top">
+       <img src="/@/download.gif" style="margin:0 5px 5px 0; float:left;">
+       v<strong>1.0</strong>
+       <a href="http://jquery-xml2json-plugin.googlecode.com/svn/trunk/xml-to-json.zip"><strong>xml-to-json.zip</strong></a>
+       <br/>
+       <small>
+        previous versions
+        -
+       </small>
+      </td>
+     </tr>
+     <tr>
+      <td valign="top" align="right">Files:</td>
+      <td valign="top">
+       These are the individual required files (<span class="Warning">already included in the zip package above</span>)
+       <ul>
+        <li><a href='jquery.xml2json.js'><strong>jQuery.xml2json.js</strong></a> (packed version: <a href="jquery.xml2json.pack.js">jQuery.xml2json.pack.js</a>)</li>
+       </ul>
+      </td>
+     </tr>
+     <tr>
+      <td valign="top" align="right">jQuery:</td>
+      <td valign="top">
+       <a href="http://jquery.com/src/jquery-latest.js">jquery-latest.js</a> (<a href="http://www.jquery.com/">see jQuery.com</a>)
+      </td>
+     </tr>
+    </table>
+    
+    <h2>Installation</h2>
+    <pre class="code"><code class="html">&lt;script src=&quot;jquery-latest.js&quot; type=&quot;text/javascript&quot; language=&quot;javascript&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;jquery.xml2json.js&quot; type=&quot;text/javascript&quot; language=&quot;javascript&quot;&gt;&lt;/script&gt;
+    </code></pre>
+   </div><!--// tab-Download //-->
+   
+   <div id="tab-Support">
+    <h2>Support</h2>
+    <p>
+     Quick Support Links: <a class="B Yes" href="http://groups.google.com/group/jquery-en">Help me!</a>
+     | <a href="http://plugins.jquery.com/node/add/project_issue/xml2json/bug">Report a bug</a>
+     | <a href="http://plugins.jquery.com/node/add/project_issue/xml2json/feature">Suggest new feature</a>
+    </p>
+    <p>
+     Support for this plugin is available through the <a class="external" target="_blank" href="http://jquery.com/discuss/">jQuery Mailing List</a>.
+     This is a very active list to which many jQuery developers and users subscribe.
+     <br/>
+     Access to the jQuery Mailing List is also available through the
+     <a class="external" target="_blank" href="http://www.nabble.com/JQuery-f15494.html">Nabble Forums</a>, the
+     <a class="external" target="_blank" href="http://groups.google.com/group/jquery-en">jQuery Google Group</a> and the
+     <a class="external" target="_blank" href="http://plugins.jquery.com/project/xml2json/">official project page</a>.
+    </p>
+    
+    <h2>Related Resources</h2>
+    <p>
+     As mentioned in the introduction, you may not need this plugin if
+     all you're going to be doing is some very simple ad-hoc XML handling.
+     Whether or not that is the case, I thoroughly recommend this amazing article:
+     <br/>
+     <a href="http://www.webmonkey.com/tutorial/Easy_XML_Consumption_using_jQuery" target="_blank"
+     ><strong>Easy XML handling with jQuery</strong></a> (without a plugin)
+    </p>
+    <p>
+     Feel free to post suggestions in the <a class="external" target="_blank" href="http://jquery.com/discuss/">jQuery Mailing List</a>. (Yes, I will check it!)
+    </p>
+    
+    <h2>Give credit where credit is due...</h2>
+    <ul>
+     <li>Diego A. - Author, <a href="http://www.fyneworks.com/">Professional Web Design London</a></li>
+     <li>Dean Edwards - Author of <a href="http://dean.edwards.name/packer/">JS Packer</a> used to compress the plugin</li>
+     <li>Inspired by <a href="http://www.terracoder.com/">TerraCoder.com</a> and <a href="http://www.thomasfrank.se/xml_to_json.html">Thomas Frank</a></li>
+     <li>Some sample XML files from <a href="http://www.w3schools.com/">w3schools.com</a></li>
+    </ul>
+   </div><!--// tab-Support //-->
+   
+   
+   
+   
+   
+   
+   <!--//
+   ####################################
+   #
+   #         * END CONTENT *
+   #
+   ####################################
+   //-->
+   <div id="tab-License">
+    <h2>Attribute this work</h2>
+    <div class="license-info">
+     <table cellspacing="5" width="100%">
+      <tr>
+       <td width="90" align="right">Attribution link:</td>
+       <td valign="top">&copy; <a href="http://www.fyneworks.com/">Fyneworks.com</a></td>
+      </tr>
+      <tr>
+       <td width="90" align="right">HTML Code:</td>
+       <td valign="top">
+        <input type="text" onFocus="this.select();" onClick="this.select()" readonly="" style="width:100%;"
+         value="&amp;copy; &lt;a href=&quot;http://www.fyneworks.com/&quot;&gt;Fyneworks.com&lt;/a&gt;"
+        />
+       </td>
+      </tr>
+     </table>
+    </div>
+    <h2>License Info</h2>
+    <div class="license-info">
+     <table cellspacing="5" width="100%">
+      <tr>
+       <td valign="middle">
+        <strong>XML to JSON Plugin</strong>
+        by <a href="http://www.fyneworks.com/">Fyneworks.com</a>
+        is licensed under the
+        <a target="_blank" href="http://en.wikipedia.org/wiki/MIT_License">MIT License</a> and the
+        <a target="_blank" href="http://creativecommons.org/licenses/GPL/2.0/">GPL License</a>.
+       </td>
+       <td width="100"><a target="_blank" href="http://creativecommons.org/licenses/GPL/2.0/"><img alt="Creative Commons License" style="border-width:0" src="http://creativecommons.org/images/public/somerights20.png"/></a></td>
+      </tr>
+      <tr>
+       <td colspan="2">
+ <pre class="copyright">Copyright &copy; 2008 <a href="http://www.fyneworks.com/">Fyneworks.com</a>
+ 
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), to deal in the Software without
+ restriction, including without limitation the rights to use,
+ copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following
+ conditions:
+ 
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.</pre>
+       </td>
+      </tr>
+     </table>
+    </div><!--// License Info //-->
+   </div><!--// tab-License //-->
+  </div><!--// documentation //-->
+ 
+ </div><!--// body //-->
+ <div id="push"></div>
+</div>
+<div id="foot">
+ <!--//<div class="Clear">//-->
+  <table width="100%" cellspacing="5">
+   <tr>
+    <td valign="top">
+     <strong>XML to JSON Plugin</strong>
+     by <a href="http://www.fyneworks.com/">Fyneworks.com</a>
+     <br/>
+     is licensed under the
+     <a target="_blank" href="http://en.wikipedia.org/wiki/MIT_License">MIT License</a> and the
+     <a target="_blank" href="http://creativecommons.org/licenses/GPL/2.0/">GPL License</a>.
+    </td>
+    <td valign="top" width="50%" align="right">
+     [<a href="#top">back to top</a>]
+     <a target="_blank" href="http://jquery.com/"><img src="/jquery/project/jq.png" alt="Powered by jQuery" style="vertical-align:text-bottom"/></a>
+    </td>
+   </tr>
+  </table>
+ <!--//</div>//-->
+</div>
+ 
+	<script src='http://toolbar.wibiya.com/toolbarLoader.php?toolbarId=2147&nc=0&pl=1' type='text/javascript'></script>
+ <!--//
+ Wibiya clashes with jQuery so I found these articles:
+ http://getsatisfaction.com/wibiya/topics/jquery_1_3_conflict
+ http://getsatisfaction.com/wibiya/topics/wibiya_not_playing_nice_with_frontpage_slideshow_using_mootools
+ //-->
+ 
+	<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script><noscript>Google Analytics Script</noscript>
+ <script type="text/javascript">try{_uacct = "UA-1942730-1";urchinTracker(); }catch(e){}</script><noscript>Google Analytics</noscript>
+</body>
+</html>

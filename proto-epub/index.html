@@ -1,0 +1,448 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr" encoding="UTF-8">
+<head>
+	<meta http-equiv="Content-type" content="text/html;charset=utf-8" />
+	<meta charset="utf-8">
+	<title>Ebook Epub Reader - Proto</title>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+	<div id="header" class="open">
+		<div id="pageDisplay">
+			<input type="text" size="4" value="1" id="pageInput" /> / <span id="totalPage" ></span>
+		</div>
+		<ul id="controls">
+			<li id="showToc" class="clickable">
+				<img src="img/navigate.png" id="showToc" class="clickable"/>
+			</li>
+			<li class="hasSubMenu" style="display:none">
+				<img src="img/display.png" id="showToc" class="clickable"/>
+				<ul>
+					<li id="1col">1 Colonne</li>
+					<li id="2col">2 Colonnes</li>
+					<li id="3col">3 Colonnes</li>
+				</ul>
+			</li>
+			<li  id="firstPage" class="clickable" title="Première page">
+				<img src="img/go-first.png"/>
+			</li>
+			<li id="previousPage" class="clickable" title="Page précédente">
+				<img src="img/go-previous.png"/>
+			</li>
+			<li id="nextPage" class="clickable" title="Page suivante">
+				<img src="img/go-next.png"/>
+			</li>
+			<li id="lastPage" class="clickable" title="Dernière Page">
+				<img src="img/go-last.png" />
+			</li>
+			<li  id="in" class="clickable" title="Agrandire">
+				<img src="img/zoom-in.png"/>
+			</li>
+			<li id="out" class="clickable" title="Réduire">
+				<img src="img/zoom-out.png"/>
+			</li>
+			<li id="orig" class="clickable" title="Original">
+				<img src="img/zoom-100.png"/>
+			</li>
+		</div>
+	</div>
+	<div id="main"><div id="container" ></div></div>
+	<script type="text/javascript" src="js/jquery-1.6.2.js" ></script>
+	<script type="text/javascript" src="js/jquery.history.js" ></script>
+	<script type="text/javascript" src="js/jquery.mousewheel.min.js" ></script>
+	<script type="text/javascript" src="js/jquery.iviewer.js" ></script>
+	<script type="text/javascript" src="js/jquery.scrollTo-1.4.2.js" ></script>
+	<script type="text/javascript" src="js/jquery.dragscrollable.js" ></script>
+	<script type="text/javascript" src="js/jquery.tools.min.js" ></script>
+	<script type="text/javascript" src="js/jquery.xml2json.js" ></script>
+	<script type="text/javascript" src="js/autocolumn.js" ></script>
+	<script type="text/javascript" src="js/jquery.browser.mobile.js" ></script>
+	<script type="text/javascript">
+
+		EpubBook = {
+			bookPath : "/web-book-reader/proto-epub/",
+			fontSize : 9.5,
+			tocArray:[],
+			page:1,
+			column:2
+		};
+
+		
+		//Probably not the best way, but do the job.
+		function loadToc() {
+				$.get(EpubBook.bookPath+"META-INF/container.xml",function(containerData) {
+					var rootfile = $(containerData).find("rootfile").attr("full-path")
+					console.log(rootfile);
+					$.get(EpubBook.bookPath+rootfile,function(rootData) {
+						var tocfile = $(rootData).find("item[media-type='application/x-dtbncx+xml']").attr("href");
+						console.log(tocfile);
+						EpubBook.epubBase = rootfile.substring(0,rootfile.lastIndexOf("/")+1);
+						$.get(EpubBook.bookPath+EpubBook.epubBase+tocfile,function(data, textStatus, jqXHR){
+							console.time("ExtractToc");
+							EpubBook.tocXml = $(data);
+							EpubBook.toc = $.xml2json(data);
+							console.log(EpubBook.toc);
+							console.timeEnd("ExtractToc");
+							if( $.isArray(EpubBook.toc.navMap.navPoint) ){
+								loadEpubHtml(EpubBook.toc.navMap.navPoint[0].content.src);
+							}else{
+								loadEpubHtml(EpubBook.toc.navMap.navPoint.content.src);
+							}
+						},'xml');
+					},"xml");
+				},"xml");
+		}
+
+		function showToc(){
+			console.time("generateToc");
+			
+			$("#toc").data("overlay").load();
+			console.timeEnd("generateToc");
+		}
+
+		function navPointToArray(navPoint){
+			if($.isArray(navPoint)){
+				return navPoint;
+			}else if(navPoint){
+				return [navPoint]; 
+			}else{
+				return[];
+			}
+
+		}
+
+		function navPointLabel(navPoint){
+			return navPoint.navLabel.text[0];
+		}
+		function navPointUrl(navPoint){
+			return navPoint.content.src;
+		}
+
+		function pageInc(){
+			return ($("#main").width());
+		}
+
+		// Calcule la lageur d'une page (donc largeur du container / nombre de pages(colonnes) par container)
+		// /!\ ne pas confondre avec columnWidth qui calcule la taille d'une colonne CSS3 (sas marge etc ..)
+		function pageWidth(){
+			return ($("#main").width()/EpubBook.column);
+		}
+
+		//recalcule la largeur de la frame pour que soit un multiple 'rond' en therme de largeur de column
+		function roundSize(width){
+			return Math.ceil(width/pageWidth())* pageWidth();
+		}
+
+		function recurseToc(navPoint,elment){
+			var clickEvt = function(event){
+				console.log(event.currentTarget);
+				goToPageUrl($(event.currentTarget).data("url"));
+				$("#toc").data("overlay").close();
+			}
+			for(var i = 0;i<navPoint.length;i++){
+				//console.log(navPoint[i]);
+				var _li = $("<li class='clickable'>"+navPointLabel(navPoint[i])+"</li>").data("url",navPointUrl(navPoint[i])).click(clickEvt);
+				EpubBook.tocArray.push(navPointUrl(navPoint[i]));
+				elment.append(_li);
+				if(navPointToArray(navPoint[i].navPoint).length >0){
+					var _ul = $("<ul/>");
+					recurseToc(navPointToArray(navPoint[i].navPoint),_ul);
+					elment.append(_ul);
+				}
+
+			}
+		}
+
+		/**
+		* Affecte une nouvelle taille de police a toutes les iframes,
+		* met a jour leur taille en fonction et met a jour la taille du container.
+		*/
+		function zoom(fontSize){
+			EpubBook.fontSize = fontSize;
+			var s = 0;
+			$(".viewer").each(function(){
+				$(this).contents().find("#reader").css("font-size",EpubBook.fontSize+"pt");
+				$(this).css("width","auto");
+				var frameWidth = roundSize($(this).contents().width());
+				$(this).css("width",frameWidth+"px");
+				s += frameWidth;
+			});
+			$("#container").css("width",s+"px");
+			console.log("new fontSize "+ fontSize+"pt");
+			refreshPageNumber();
+		}
+
+
+		function refreshPageNumber(){
+			var p = $("#container").width()/pageWidth();
+			console.timeEnd("size2");
+			$("#totalPage").text(Math.round(p));
+			EpubBook.pageCount = Math.round(p);
+		}
+
+		// Calcule la taille d'une colonne CSS3 (sans marge etc ..)
+		// /!\ ne pas confondre avec pageWidth() qui calcule la lageur 
+		//     d'une page (donc largeru du container / nombre de pages(colonnes) par container)
+		function columnWidth(){
+			return Math.round($("#main").innerWidth()/EpubBook.column)- ( 40);
+		}
+
+
+		function columnHeight(){
+			 return $("#main").height()-20;
+		}
+
+		function goToPage(p){
+			
+			if(isNaN(p) || p <1) p=1;
+			if(p>EpubBook.pageCount) p = EpubBook.pageCount;
+			
+			var realPage = (Math.floor((p-1)/EpubBook.column) * EpubBook.column) +1;
+			if(realPage> p){
+				realPage -=  EpubBook.column;
+			}
+			EpubBook.page = realPage;
+			var left = (realPage-1) * pageWidth();
+			$("#container").css("left","-"+left+"px");
+			$("#pageInput").val(EpubBook.page);
+		}	
+
+		function goToFirstPage(){
+			goToPage(1);
+		}
+		function goToLastPage(){
+			goToPage(EpubBook.pageCount);
+		}
+		function goToPreviousPage() {
+			goToPage(EpubBook.page-EpubBook.column);
+		}
+		function goToNextPage() {
+			goToPage(EpubBook.page+EpubBook.column);
+		}
+		function scrollPage(event, delta){
+					goToPage(EpubBook.page - (EpubBook.column * delta));	
+		}
+
+		function getPageByUrl(url){
+			console.log(url);
+			var surl = url.split("#");
+			var s=0;
+			for(var i=0;i<EpubBook.tocArray.length;i++){
+				if(EpubBook.tocArray[i] == surl[0]){
+					var pos = $("#chap"+i).position().left;
+					var p=Math.round(pos/pageWidth() + 1);
+					if(surl.length >1) {
+						var obj = $("#chap"+i).contents().find('#'+surl[1]);
+						if(obj.length >0){
+							p += Math.floor(obj.position().left / pageWidth());
+						}
+					}
+					return p ;
+				}
+			}
+		}
+
+		function goToPageUrl(url){
+			goToPage(getPageByUrl(url));
+		}
+
+		function doResize(){
+				var _w = $("body").innerWidth()-10;
+				while(_w % 2 != 0 || _w % 3 !=0){
+					_w --;
+				}
+ 				$("#main").css("height",($("body").innerHeight()-40)+"px");
+ 				$("#main").css("width",_w+"px");
+ 				$("#mainLoading").css("height",($("body").innerHeight())+"px");
+ 				$("#mainLoading").css("width",($("body").innerWidth())+"px");
+		}
+
+		
+		var loaded = 0;
+		function viewerLoad(){
+			var _contents = $(this).contents();
+			_contents.find("body").css({
+				"text-align":"justify",
+				"font-size":EpubBook.fontSize+"pt",
+				"margin":"0px",
+				"padding":"0px"
+			});
+
+			// Met a jour les liens externes 
+			_contents.find("a").each(function(){
+				var _a = $(this);
+				if(_a.attr("href") && _a.attr("href").indexOf("http") == 0){
+					_a.attr("target","_blank");
+				}else if(_a.attr("href")){
+					_a.data("url",_a.attr("href"))
+					_a.attr("href","#").click(function(){
+						goToPageUrl($(this).data("url"));
+						return false;
+					});
+				}
+			});
+			
+			var _h = columnHeight();
+			var _w = columnWidth();
+
+			$(this).contents().keydown(keyHandler)
+			.find("body").css({
+				"overflow":"hidden",
+				"background-color":"#FFFFFF"
+			}).mousewheel(scrollPage)
+			.wrapInner('<div id="reader" />').children().css({
+				"-moz-column-width":_w+"px",
+				"-webkit-column-width":_w+"px",
+				"column-width:":_w+"px",
+				"width:":_w+"px",
+				"-moz-column-gap":"40px",
+				"-webkit-column-gap":"40px",
+				"column-gap:":"40px",
+				"margin":"0px 20px",
+				"height":_h+"px",
+				"position":"absolute"
+			}).find("img,pre").css({
+				"max-width":_w+"px",
+				"overflow":"hidden"
+			});
+
+			var frameWidth = roundSize($(this).contents().width());
+			$(this).contents().find("body").css("width",_w+"px");
+			$(this).css("width",frameWidth+"px").css("height",$("#main").height()+"px");
+			$("#container").css("width",$("#container").width() + frameWidth +"px");
+
+			refreshPageNumber();
+			
+			loaded ++;
+			if(loaded >= EpubBook.tocArray.length) {
+				$(".mainLoading").hide();
+				$("#controls").stop(true,true).slideUp('slow',function(){
+					$("#header").removeClass('open');
+				});
+			}
+		}
+
+
+		function loadEpubHtml(){
+			$(".mainLoading").show();
+			$("#pageInput").val(1);
+			if($("#toc").length ==0){
+				var _toc = $("<div id='toc'/>");
+				var _toc_root = $("<ul id='tocRoot'/>");
+				recurseToc(navPointToArray(EpubBook.toc.navMap.navPoint),_toc_root);
+				$("body").append(_toc.append(_toc_root));
+				_toc.overlay({	
+					mask: {color: '#333333',opacity: 0.5},
+					closeOnClick: true
+				});
+			}
+
+			for(var i=0;i<EpubBook.tocArray.length;i++){
+				var frame = $("<iframe class='viewer'/>").attr("id","chap"+i).attr("src",EpubBook.bookPath+EpubBook.epubBase+EpubBook.tocArray[i]).load(viewerLoad);
+				$("#container").append(frame);
+			}
+		}
+
+		function keyHandler(event) {
+				console.log(event.keyCode);
+				switch(event.keyCode){
+					case 33:
+					case 37:
+					case 38:
+						goToPreviousPage();
+						return false;
+					case 34:
+					case 39:
+					case 40:
+						goToNextPage();
+						return false;
+					case 36:
+						goToFirstPage();
+						return false;
+					case 35:
+						goToLastPage()
+						return false;
+				}
+			}
+
+
+		$(function(){
+			doResize();
+			//Setup the ajax indicator
+			$('body').append('<div id="ajaxBusy"> Chargement...</div>');
+			$('body').append('<div id="mainLoading" class="mainLoading"></div><div  id="mainLoadingContent" align="middle" class="mainLoading"> <img src="img/loading.gif" /> Chargement du livre en cours </div>');
+			doResize();
+
+
+			//on determine le nombre de colonnes automatiquement en fonction du ratio
+			var ratio = $("body").innerWidth() / $("body").innerHeight()
+			if(ratio > (1.65)) {
+				EpubBook.column = 2;
+			}else if(ratio > 1) {
+				EpubBook.column = 2;
+			}else{
+				EpubBook.column = 1;			
+			}
+			EpubBook.bookPath += document.location.search.replace("?","") + "/";
+
+			// Ajax activity indicator bound to ajax start/stop document events
+			$(document).ajaxStart(function(){
+					$('#ajaxBusy').show();
+				}).ajaxStop(function(){
+					$('#ajaxBusy').hide();
+				});
+
+			$("#showToc").click(showToc);
+
+			$("#in").click(function(){zoom(EpubBook.fontSize+1.5)});
+			$("#out").click(function(){zoom(EpubBook.fontSize-1.5)});
+			$("#orig").click(function(){zoom(9)});
+			$("#nextPage").click(function(){goToNextPage()});
+			$("#previousPage").click(function(){goToPreviousPage()});
+			$("#firstPage").click(function(){goToFirstPage()});
+			$("#lastPage").click(function(){goToLastPage()});
+
+			$("body").mousewheel(scrollPage);
+
+			$("#header").hover(
+			function(){
+				$(this).addClass('open');
+				$("#controls").stop(true,true).slideDown(100)
+			},
+			function(){
+				$("#controls").stop(true,true).slideUp('fast',function(){
+					$("#header").removeClass('open');
+				});
+			}
+		);
+
+		$("#header li.hasSubMenu").hover(
+			function(){
+				$(this).children("ul").stop(true,true).fadeIn()
+			},
+			function(){
+				$(this).children("ul").stop(true,true).fadeOut()
+			}
+		);
+
+				
+			
+			$("#pageInput").change(function(){
+				var p = parseInt($("#pageInput").val());
+				if(isNaN(p)){
+					$("#pageInput").val(EpubBook.page);
+				}else{
+					goToPage(p);
+				}
+			});
+
+			$(document).keydown(keyHandler);
+
+			//init reader
+			loadToc();
+});
+
+
+
+	</script>
+</body>
+</html>

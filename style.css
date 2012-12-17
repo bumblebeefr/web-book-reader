@@ -1,0 +1,61 @@
+body {
+	overflow:hidden;
+	background:#333333;
+}
+
+#main {
+	width:800px;
+	height:533px;
+
+	  position: fixed;
+	  top: 50%;
+	  left: 50%;
+	  margin-top: -266px;
+	  margin-left: -400px;
+
+
+	background:transparent url(BumblebeeBookSplashScreen.jpg) center center no-repeat;
+
+	-webkit-box-shadow: #000 1px 3px 5px;
+	-moz-box-shadow: #000 1px 3px 5px;
+	box-shadow: #000 1px 3px 5px;
+
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+	border-radius: 2px;
+}
+
+#main ul {
+	position:absolute;
+	width:300px;
+	margin:0px;
+	padding:0px;
+	top:200px;
+	left:70px;
+	font-size:9pt;
+	opacity:0.8;
+}
+
+
+#main ul li.pdf{
+	list-style-image:url('pdf.png');
+	list-style-position:inside;
+}
+#main ul li.epub{
+	list-style-image:url('epub.png');
+	list-style-position:inside;
+}
+
+#main ul li a{
+	text-decoration:none;
+	color:#333333;
+}
+
+#footer{
+	position:absolute;
+	width:100%;
+	bottom:3px;
+	text-align:center;
+	font-size:8pt;
+	color:#663333;
+}
