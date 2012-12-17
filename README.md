@@ -1,7 +1,7 @@
 web-book-reader
 ===============
 
-A little Web (Javascript) e-book reader prototype to read epub and pdf files into a browser. This is more a poof of concept than a real application.
+A little Web (Javascript) e-book reader prototype to read epub and pdf files into a browser. This is more a quick and dirty poof of concept than a real application.
 
 A short explanation of this projets (in french) can be read here : http://www.bumble-bee.fr/articles/demos/bumblebee_book_reader_1
 
